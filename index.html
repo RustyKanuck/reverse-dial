@@ -5,16 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reverse Dial Method</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; color:#333; }
     h1 { text-align: center; }
     .section {
-      background: #fff; padding: 15px; margin-bottom: 20px;
-      border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    input, select { width: 100%; padding: 5px; margin: 5px 0 12px 0; }
-    .results { background: #eef; padding: 10px; font-weight: bold; border-radius: 5px; }
-    canvas { border: 1px solid #ccc; margin-top: 10px; }
+    input, select {
+      width: 100%;
+      padding: 5px;
+      margin: 5px 0 12px 0;
+      box-sizing: border-box;
+    }
+    .results {
+      background: #eef;
+      padding: 10px;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
     .smiley { font-size: 1.6em; }
+    .note { font-size: 0.9em; color: #555; }
   </style>
 </head>
 <body>
@@ -24,16 +41,22 @@
 <!-- DIMENSIONS -->
 <div class="section">
   <h2>Dimensions</h2>
-  <label>Dial span A (in):</label><input id="A" type="number" step="0.001">
-  <label>B: Dial to front motor foot (in):</label><input id="B" type="number" step="0.001">
-  <label>C: Dial to rear motor foot (in):</label><input id="C" type="number" step="0.001">
-  <label>Machine RPM:</label><input id="rpm" type="number">
-  <label>Coupling Diameter (in):</label><input id="coupling" type="number" step="0.01">
+  <h4>Mount both dials at 12 o'clock in the same plane, zero them, and correct for sag separately.</h4>
+  <label>Dial span A (distance between dial contact points) [in]:</label>
+  <input id="A" type="number" step="0.001">
+  <label>B: Distance from driven-side dial to front motor foot [in]:</label>
+  <input id="B" type="number" step="0.001">
+  <label>C: Distance from driven-side dial to rear motor foot [in]:</label>
+  <input id="C" type="number" step="0.001">
+  <label>Machine RPM:</label>
+  <input id="rpm" type="number">
+  <label>Coupling Diameter (in):</label>
+  <input id="coupling" type="number" step="0.01">
 </div>
 
 <!-- MOTOR DIAL -->
 <div class="section">
-  <h2>Motor-Mounted Dial (D1)</h2>
+  <h2>Motor-Mounted Dial Readings (D1) – reads driven</h2>
   <label>12 o'clock:</label><input id="m12" type="number" step="0.001">
   <label>3 o'clock:</label><input id="m3" type="number" step="0.001">
   <label>6 o'clock:</label><input id="m6" type="number" step="0.001">
@@ -42,7 +65,7 @@
 
 <!-- PUMP DIAL -->
 <div class="section">
-  <h2>Pump-Mounted Dial (D2)</h2>
+  <h2>Pump-Mounted Dial Readings (D2) – reads driver</h2>
   <label>12 o'clock:</label><input id="p12" type="number" step="0.001">
   <label>3 o'clock:</label><input id="p3" type="number" step="0.001">
   <label>6 o'clock:</label><input id="p6" type="number" step="0.001">
@@ -54,8 +77,10 @@
   <h2>Thermal Growth Compensation</h2>
   <label><input id="tgEnable" type="checkbox"> Enable Thermal Compensation</label><br><br>
 
-  <label>Motor height (in):</label><input id="motorH" type="number" step="0.01">
-  <label>Motor ΔT (°F):</label><input id="motorT" type="number">
+  <label>Motor height (foot to shaft center) [in]:</label>
+  <input id="motorH" type="number" step="0.01">
+  <label>Motor temperature rise ΔT (°F):</label>
+  <input id="motorT" type="number">
   <label>Motor material:</label>
   <select id="motorMat">
     <option>Cast Steel</option>
@@ -63,8 +88,10 @@
     <option>Stainless Steel 316</option>
   </select>
 
-  <label>Pump height (in):</label><input id="pumpH" type="number" step="0.01">
-  <label>Pump ΔT (°F):</label><input id="pumpT" type="number">
+  <label>Pump height (foot to shaft center) [in]:</label>
+  <input id="pumpH" type="number" step="0.01">
+  <label>Pump temperature rise ΔT (°F):</label>
+  <input id="pumpT" type="number">
   <label>Pump material:</label>
   <select id="pumpMat">
     <option>Cast Steel</option>
@@ -73,130 +100,163 @@
   </select>
 </div>
 
-<button onclick="calculate()" style="padding:10px 20px;">Calculate Alignment</button>
+<div class="section">
+  <button onclick="calculate()" style="padding:10px 20px;">Calculate Alignment</button>
+</div>
 
 <div class="section results" id="results">
   <h3>Results:</h3>
   <p>Waiting for input...</p>
 </div>
 
-<!-- GRAPHS -->
 <div class="section">
-  <h3>Vertical Graph</h3><canvas id="vgraph" width="400" height="150"></canvas>
-  <h3>Horizontal Graph</h3><canvas id="hgraph" width="400" height="150"></canvas>
+  <h3>Vertical Alignment Graph</h3>
+  <canvas id="vgraph" width="400" height="150"></canvas>
+  <h3>Horizontal Alignment Graph</h3>
+  <canvas id="hgraph" width="400" height="150"></canvas>
 </div>
 
-<!-- REFERENCE IMAGE -->
 <div class="section">
-  <h2>Reverse Dial Reference Diagram</h2>
-  <p>Click to enlarge:</p>
+  <h2>Reference: Reverse Dial Diagram</h2>
+  <p class="note">Click to open full-size.</p>
+  <!-- Put reverse_indicator.png in same folder as this HTML -->
   <a href="reverse_indicator.png" target="_blank">
-    <img src="reverse_indicator.png" style="max-width:100%;border:1px solid #ccc;">
+    <img src="reverse_indicator.png" alt="Reverse dial reference"
+         style="max-width:100%;height:auto;border:1px solid #ccc;">
   </a>
 </div>
 
 <script>
-// quick util
-function N(id){ return parseFloat(document.getElementById(id).value); }
+function N(id){
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? null : v;
+}
 
-function calculate() {
+function calculate(){
   const A = N("A"), B = N("B"), C = N("C");
-  const coupling = N("coupling"), rpm = N("rpm");
+  const rpm = N("rpm"), coupling = N("coupling");
 
   const m12=N("m12"), m3=N("m3"), m6=N("m6"), m9=N("m9");
   const p12=N("p12"), p3=N("p3"), p6=N("p6"), p9=N("p9");
 
-  // VERTICAL
+  // Basic sanity check
+  if ([A,B,C,m12,m3,m6,m9,p12,p3,p6,p9].some(v => v === null)){
+    document.getElementById("results").innerHTML =
+      "<h3>Results:</h3><p>Please fill all required fields.</p>";
+    return;
+  }
+
+  const MIRROR_TOL = 0.0005; // 0.0005" ≈ half a thou
+
+  // ===== VERTICAL (12–6) =====
   const D1v = m6 - m12;
   const D2v = p6 - p12;
 
-  let VO = D1v / 2;
-  let VA = (D2v - D1v) / (2 * A);
+  let VO = D1v / 2.0;
+  let VA = (D2v - D1v) / (2.0 * A);
+  let mirrorVert = false;
 
-  // MIRROR-READING AUTO-FIX (shafts are parallel)
-  if (Math.abs(D1v + D2v) < 0.0005) {
-    VA = 0; // parallel shafts, pure offset
+  // Mirror pattern: equal & opposite → treat as pure offset (no angle)
+  if (Math.abs(D1v + D2v) <= MIRROR_TOL) {
+    VA = 0;
+    mirrorVert = true;
   }
 
   let S1 = VO + VA * B;
   let S2 = VO + VA * C;
 
-  // HORIZONTAL
+  // ===== HORIZONTAL (3–9) =====
   const D1h = m9 - m3;
   const D2h = p9 - p3;
 
-  const HO = D1h / 2;
-  let HA = (D2h - D1h) / (2 * A);
+  let HO = D1h / 2.0;
+  let HA = (D2h - D1h) / (2.0 * A);
+  let mirrorHoriz = false;
 
-  if (Math.abs(D1h + D2h) < 0.0005) {
+  if (Math.abs(D1h + D2h) <= MIRROR_TOL) {
     HA = 0;
+    mirrorHoriz = true;
   }
 
-  // THERMAL GROWTH
-  let motorGrow=0, pumpGrow=0;
+  // ===== THERMAL GROWTH =====
+  let motorGrow = 0, pumpGrow = 0;
   if (document.getElementById("tgEnable").checked) {
     const coeff = {
       "Cast Steel": 6.6e-6,
       "Cast Iron": 5.5e-6,
       "Stainless Steel 316": 9.6e-6
     };
-    motorGrow = coeff[document.getElementById("motorMat").value] * N("motorH") * N("motorT");
-    pumpGrow  = coeff[document.getElementById("pumpMat").value]  * N("pumpH")  * N("pumpT");
-
-    const diff = motorGrow - pumpGrow;
-    S1 += diff;
-    S2 += diff;
+    const motorH = N("motorH"), motorT = N("motorT");
+    const pumpH  = N("pumpH"),  pumpT  = N("pumpT");
+    if ([motorH,motorT,pumpH,pumpT].every(v => v !== null)){
+      motorGrow = coeff[document.getElementById("motorMat").value] * motorH * motorT;
+      pumpGrow  = coeff[document.getElementById("pumpMat").value]  * pumpH  * pumpT;
+      const diff = motorGrow - pumpGrow;
+      S1 += diff;
+      S2 += diff;
+    }
   }
 
-  // TOLERANCES
+  // ===== TOLERANCES (rough) =====
   let voTol = coupling * 0.0005;
   let vaTol = coupling * 0.0001;
   let hoTol = coupling * 0.0005;
   let haTol = coupling * 0.0001;
 
-  if (rpm < 1800){ voTol*=1.5; vaTol*=1.5; hoTol*=1.5; haTol*=1.5; }
-  if (rpm > 3600){ voTol*=0.5; vaTol*=0.5; hoTol*=0.5; haTol*=0.5; }
+  if (rpm !== null){
+    if (rpm < 1800){ voTol*=1.5; vaTol*=1.5; hoTol*=1.5; haTol*=1.5; }
+    else if (rpm > 3600){ voTol*=0.5; vaTol*=0.5; hoTol*=0.5; haTol*=0.5; }
+  }
 
-  const ok =
-    Math.abs(VO)<=voTol &&
-    Math.abs(VA)<=vaTol &&
-    Math.abs(HO)<=hoTol &&
-    Math.abs(HA)<=haTol;
+  const within =
+    Math.abs(VO) <= voTol &&
+    Math.abs(VA) <= vaTol &&
+    Math.abs(HO) <= hoTol &&
+    Math.abs(HA) <= haTol;
 
-  const face = ok ? "😊 In tolerance" : "☹️ Out of tolerance";
+  const face = within ? "😊 In tolerance" : "☹️ Out of tolerance";
+
+  const mirrorNotes = [];
+  if (mirrorVert)  mirrorNotes.push("Vertical mirror pattern detected → treated as pure offset (VA = 0).");
+  if (mirrorHoriz) mirrorNotes.push("Horizontal mirror pattern detected → treated as pure offset (HA = 0).");
 
   document.getElementById("results").innerHTML = `
-    <p>Front foot shim (S1): ${S1.toFixed(4)} in</p>
-    <p>Rear foot shim (S2): ${S2.toFixed(4)} in</p>
-    <hr>
+    <p>Positive = add shims, negative = remove shims.</p>
+    <p>Front foot shim S1: ${S1.toFixed(4)} in</p>
+    <p>Rear foot shim S2: ${S2.toFixed(4)} in</p>
+    <hr/>
     <p>VO: ${VO.toFixed(4)} in</p>
     <p>VA: ${VA.toFixed(5)} in/in</p>
     <p>HO: ${HO.toFixed(4)} in</p>
     <p>HA: ${HA.toFixed(5)} in/in</p>
-    <hr>
+    <hr/>
     <p>Thermal (motor): ${motorGrow.toFixed(4)} in</p>
     <p>Thermal (pump): ${pumpGrow.toFixed(4)} in</p>
-    <hr>
-    <p>VO ≤ ${voTol.toFixed(4)}</p>
-    <p>VA ≤ ${vaTol.toFixed(5)}</p>
-    <p>HO ≤ ${hoTol.toFixed(4)}</p>
-    <p>HA ≤ ${haTol.toFixed(5)}</p>
+    <hr/>
+    <p>VO ≤ ${voTol.toFixed(4)}"</p>
+    <p>VA ≤ ${vaTol.toFixed(5)}"/in</p>
+    <p>HO ≤ ${hoTol.toFixed(4)}"</p>
+    <p>HA ≤ ${haTol.toFixed(5)}"/in</p>
     <p class="smiley">${face}</p>
+    ${mirrorNotes.length ? `<p class="note">${mirrorNotes.join("<br>")}</p>` : ""}
   `;
 
   drawGraph("vgraph", VO);
   drawGraph("hgraph", HO);
 }
 
-function drawGraph(id, v){
-  let c=document.getElementById(id), x=c.getContext("2d");
-  x.clearRect(0,0,c.width,c.height);
-  const cx=c.width/2, cy=c.height/2;
-  x.beginPath();
-  x.moveTo(cx-60, cy - v*1200);
-  x.lineTo(cx, cy);
-  x.lineTo(cx+60, cy + v*1200);
-  x.strokeStyle="#000"; x.lineWidth=2; x.stroke();
+function drawGraph(id, value){
+  const c = document.getElementById(id);
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+  const cx = c.width/2, cy = c.height/2;
+  ctx.beginPath();
+  ctx.moveTo(cx-60, cy - value*1200);
+  ctx.lineTo(cx, cy);
+  ctx.lineTo(cx+60, cy + value*1200);
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+  ctx.stroke();
 }
 </script>
 
