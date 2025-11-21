@@ -5,7 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reverse Dial Method</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; color:#333; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
     h1 { text-align: center; }
     .section {
       background: #fff;
@@ -41,7 +46,7 @@
 <!-- DIMENSIONS -->
 <div class="section">
   <h2>Dimensions</h2>
-  <h4>Mount both dials at 12 o'clock in the same plane, zero them, and correct for sag separately.</h4>
+  <h4>Mount both dials at 12 o'clock in the same plane and zero. Correct sag separately.</h4>
   <label>Dial span A (distance between dial contact points) [in]:</label>
   <input id="A" type="number" step="0.001">
   <label>B: Distance from driven-side dial to front motor foot [in]:</label>
@@ -50,7 +55,7 @@
   <input id="C" type="number" step="0.001">
   <label>Machine RPM:</label>
   <input id="rpm" type="number">
-  <label>Coupling Diameter (in):</label>
+  <label>Coupling diameter (in):</label>
   <input id="coupling" type="number" step="0.01">
 </div>
 
@@ -118,8 +123,8 @@
 
 <div class="section">
   <h2>Reference: Reverse Dial Diagram</h2>
-  <p class="note">Click to open full-size.</p>
-  <!-- Put reverse_indicator.png in same folder as this HTML -->
+  <p class="note">Click image to open full size.</p>
+  <!-- Save your screenshot as reverse_indicator.png next to this HTML file -->
   <a href="reverse_indicator.png" target="_blank">
     <img src="reverse_indicator.png" alt="Reverse dial reference"
          style="max-width:100%;height:auto;border:1px solid #ccc;">
@@ -139,46 +144,44 @@ function calculate(){
   const m12=N("m12"), m3=N("m3"), m6=N("m6"), m9=N("m9");
   const p12=N("p12"), p3=N("p3"), p6=N("p6"), p9=N("p9");
 
-  // Basic sanity check
-  if ([A,B,C,m12,m3,m6,m9,p12,p3,p6,p9].some(v => v === null)){
+  if ([A,B,C,m12,m3,m6,m9,p12,p3,p6,p9].some(v => v === null)) {
     document.getElementById("results").innerHTML =
-      "<h3>Results:</h3><p>Please fill all required fields.</p>";
+      "<h3>Results:</h3><p>Please fill in all required fields.</p>";
     return;
   }
 
-  const MIRROR_TOL = 0.0005; // 0.0005" ≈ half a thou
+  // ---------------- VERTICAL (12–6) ----------------
+  // D1, D2 as per book: total reading from 12 → 6 on each dial
+  const D1 = m6 - m12;
+  const D2 = p6 - p12;
+  const Davg = (D1 + D2) / 2.0;
 
-  // ===== VERTICAL (12–6) =====
-  const D1v = m6 - m12;
-  const D2v = p6 - p12;
+  // EXACT textbook shim formulas:
+  // S1 = (B + A) * ((D1 + D2)/2) - (D1/2)
+  // S2 = (C + A) * ((D1 + D2)/2) - (D1/2)
+  let S1 = (B + A) * Davg - (D1 / 2.0);
+  let S2 = (C + A) * Davg - (D1 / 2.0);
 
-  let VO = D1v / 2.0;
-  let VA = (D2v - D1v) / (2.0 * A);
-  let mirrorVert = false;
-
-  // Mirror pattern: equal & opposite → treat as pure offset (no angle)
-  if (Math.abs(D1v + D2v) <= MIRROR_TOL) {
+  // From S1 & S2, derive VO and VA (linear line through feet):
+  // S(x) = VO + VA * x
+  // S(B) = S1, S(C) = S2
+  let VA, VO;
+  if (C !== B){
+    VA = (S2 - S1) / (C - B);    // in/in
+    VO = S1 - VA * B;            // offset at dial plane (x = 0)
+  } else {
     VA = 0;
-    mirrorVert = true;
+    VO = S1;
   }
 
-  let S1 = VO + VA * B;
-  let S2 = VO + VA * C;
-
-  // ===== HORIZONTAL (3–9) =====
+  // ---------------- HORIZONTAL (3–9) ----------------
   const D1h = m9 - m3;
   const D2h = p9 - p3;
 
-  let HO = D1h / 2.0;
-  let HA = (D2h - D1h) / (2.0 * A);
-  let mirrorHoriz = false;
+  const HO = D1h / 2.0;
+  const HA = (D2h - D1h) / (2.0 * A);
 
-  if (Math.abs(D1h + D2h) <= MIRROR_TOL) {
-    HA = 0;
-    mirrorHoriz = true;
-  }
-
-  // ===== THERMAL GROWTH =====
+  // ---------------- THERMAL GROWTH ----------------
   let motorGrow = 0, pumpGrow = 0;
   if (document.getElementById("tgEnable").checked) {
     const coeff = {
@@ -188,24 +191,26 @@ function calculate(){
     };
     const motorH = N("motorH"), motorT = N("motorT");
     const pumpH  = N("pumpH"),  pumpT  = N("pumpT");
-    if ([motorH,motorT,pumpH,pumpT].every(v => v !== null)){
+
+    if ([motorH,motorT,pumpH,pumpT].every(v => v !== null)) {
       motorGrow = coeff[document.getElementById("motorMat").value] * motorH * motorT;
       pumpGrow  = coeff[document.getElementById("pumpMat").value]  * pumpH  * pumpT;
+
       const diff = motorGrow - pumpGrow;
       S1 += diff;
       S2 += diff;
     }
   }
 
-  // ===== TOLERANCES (rough) =====
+  // ---------------- TOLERANCES (rough) ----------------
   let voTol = coupling * 0.0005;
   let vaTol = coupling * 0.0001;
   let hoTol = coupling * 0.0005;
   let haTol = coupling * 0.0001;
 
-  if (rpm !== null){
-    if (rpm < 1800){ voTol*=1.5; vaTol*=1.5; hoTol*=1.5; haTol*=1.5; }
-    else if (rpm > 3600){ voTol*=0.5; vaTol*=0.5; hoTol*=0.5; haTol*=0.5; }
+  if (rpm !== null) {
+    if (rpm < 1800) { voTol*=1.5; vaTol*=1.5; hoTol*=1.5; haTol*=1.5; }
+    else if (rpm > 3600) { voTol*=0.5; vaTol*=0.5; hoTol*=0.5; haTol*=0.5; }
   }
 
   const within =
@@ -216,36 +221,32 @@ function calculate(){
 
   const face = within ? "😊 In tolerance" : "☹️ Out of tolerance";
 
-  const mirrorNotes = [];
-  if (mirrorVert)  mirrorNotes.push("Vertical mirror pattern detected → treated as pure offset (VA = 0).");
-  if (mirrorHoriz) mirrorNotes.push("Horizontal mirror pattern detected → treated as pure offset (HA = 0).");
-
   document.getElementById("results").innerHTML = `
     <p>Positive = add shims, negative = remove shims.</p>
-    <p>Front foot shim S1: ${S1.toFixed(4)} in</p>
-    <p>Rear foot shim S2: ${S2.toFixed(4)} in</p>
+    <p>Front (inboard) foot shim S1: ${S1.toFixed(4)} in</p>
+    <p>Rear (outboard) foot shim S2: ${S2.toFixed(4)} in</p>
     <hr/>
-    <p>VO: ${VO.toFixed(4)} in</p>
-    <p>VA: ${VA.toFixed(5)} in/in</p>
-    <p>HO: ${HO.toFixed(4)} in</p>
-    <p>HA: ${HA.toFixed(5)} in/in</p>
+    <p>Raw vertical readings: D1 = ${D1.toFixed(4)} in, D2 = ${D2.toFixed(4)} in</p>
+    <p>Vertical offset VO (at dial plane): ${VO.toFixed(4)} in</p>
+    <p>Vertical angularity VA: ${VA.toFixed(5)} in/in</p>
+    <p>Horizontal offset HO: ${HO.toFixed(4)} in</p>
+    <p>Horizontal angularity HA: ${HA.toFixed(5)} in/in</p>
     <hr/>
-    <p>Thermal (motor): ${motorGrow.toFixed(4)} in</p>
-    <p>Thermal (pump): ${pumpGrow.toFixed(4)} in</p>
+    <p>Thermal growth (motor): ${motorGrow.toFixed(4)} in</p>
+    <p>Thermal growth (pump): ${pumpGrow.toFixed(4)} in</p>
     <hr/>
     <p>VO ≤ ${voTol.toFixed(4)}"</p>
     <p>VA ≤ ${vaTol.toFixed(5)}"/in</p>
     <p>HO ≤ ${hoTol.toFixed(4)}"</p>
     <p>HA ≤ ${haTol.toFixed(5)}"/in</p>
     <p class="smiley">${face}</p>
-    ${mirrorNotes.length ? `<p class="note">${mirrorNotes.join("<br>")}</p>` : ""}
   `;
 
-  drawGraph("vgraph", VO);
-  drawGraph("hgraph", HO);
+  drawGraph("vgraph", VO, "Vertical");
+  drawGraph("hgraph", HO, "Horizontal");
 }
 
-function drawGraph(id, value){
+function drawGraph(id, value, label){
   const c = document.getElementById(id);
   const ctx = c.getContext("2d");
   ctx.clearRect(0,0,c.width,c.height);
@@ -257,6 +258,8 @@ function drawGraph(id, value){
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
   ctx.stroke();
+  ctx.font = "12px Arial";
+  ctx.fillText(label, 10, 15);
 }
 </script>
 
