@@ -3,33 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reverse Dial Method</title>
+  <title>Reverse Dial Method Calculator</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; color: #333; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
     h1 { text-align: center; }
-    label { font-weight: bold; }
-    input, select { width: 100%; padding: 5px; margin: 5px 0 15px 0; }
-    .section { background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    .results { background: #eef; padding: 10px; font-weight: bold; border-radius: 5px; }
-    canvas { margin-top: 10px; border: 1px solid #ccc; }
-    .smiley { font-size: 1.5em; }
+    h2 { margin-top: 0; }
+    label { font-weight: bold; display: block; margin-top: 5px; }
+    input, select {
+      width: 100%;
+      padding: 5px;
+      margin: 5px 0 10px 0;
+      box-sizing: border-box;
+    }
+    .section {
+      background: #ffffff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .results {
+      background: #eef;
+      padding: 10px;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+    canvas {
+      margin-top: 10px;
+      border: 1px solid #ccc;
+    }
+    .smiley {
+      font-size: 1.5em;
+    }
+    button {
+      padding: 8px 16px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
   </style>
 </head>
 <body>
   <h1>Reverse Dial Method</h1>
 
   <div class="section">
-    <h2>Dimensions - Mount both dials at 12 o'clock (same plane) and "zero"</h2>
-    <h4>*note: you must correct for dial sag, check at 6 o'clock and add it to zero dial reading at 12 o'clock position to remove dial sag from actual alignment measurements.*</h4>
-    <label>Distance between dial contact points (Dial span) [in]:</label><input id="distA" type="number" step="0.001" />
-    <label>Distance from furthest dial point(driven side) to FRONT foot  [in]:</label><input id="distB" type="number" step="0.001" />
-    <label>Distance from furthest dial point(driven side) to BACK foot [in]:</label><input id="distC" type="number" step="0.001" />
-    <label>Machine RPM:</label><input id="rpm" type="number" />
-    <label>Coupling Diameter (circumference/3.1416)(in):</label><input id="couplingDia" type="number" step="0.01" />
+    <h2>Dimensions</h2>
+    <h4>
+      Mount both dials in the same plane at the 12 o'clock position and zero.
+      Correct for dial sag separately (check at 6 o'clock and preset zero to remove sag).
+    </h4>
+    <label>Dial span A (distance between dial contact points) [in]:</label>
+    <input id="distA" type="number" step="0.001" />
+
+    <label>B: Distance from driven-side dial to <strong>front</strong> motor foot [in]:</label>
+    <input id="distB" type="number" step="0.001" />
+
+    <label>C: Distance from driven-side dial to <strong>rear</strong> motor foot [in]:</label>
+    <input id="distC" type="number" step="0.001" />
+
+    <label>Machine RPM:</label>
+    <input id="rpm" type="number" />
+
+    <label>Coupling Diameter (in):</label>
+    <input id="couplingDia" type="number" step="0.01" />
   </div>
 
   <div class="section">
-    <h2>Motor-Mounted Dial Readings (reads off driven) (D1)</h2>
+    <h2>Motor-Mounted Dial Readings (D1) – Reads off Driven</h2>
     <label>12 o'clock:</label><input id="m12" type="number" step="0.001" />
     <label>3 o'clock:</label><input id="m3" type="number" step="0.001" />
     <label>6 o'clock:</label><input id="m6" type="number" step="0.001" />
@@ -37,7 +83,7 @@
   </div>
 
   <div class="section">
-    <h2>Pump-Mounted Dial Readings (reads off driver) (D2)</h2>
+    <h2>Pump-Mounted Dial Readings (D2) – Reads off Driver</h2>
     <label>12 o'clock:</label><input id="p12" type="number" step="0.001" />
     <label>3 o'clock:</label><input id="p3" type="number" step="0.001" />
     <label>6 o'clock:</label><input id="p6" type="number" step="0.001" />
@@ -46,13 +92,29 @@
 
   <div class="section">
     <h2>Thermal Growth Compensation</h2>
-    <label><input id="enableThermal" type="checkbox" /> Enable Thermal Growth</label><br/><br/>
-    <label>Motor Height from bottom of foot to Shaft Center (in):</label><input id="motorHeight" type="number" step="0.01" />
-    <label>Motor Temp Rise (°F):</label><input id="motorTempRise" type="number" />
-    <label>Motor Material:</label><select id="motorMaterial"><option>Cast Steel</option><option>Cast Iron</option><option>Stainless Steel 316</option></select>
-    <label>Pump Height from bottom of foot to Shaft Center (in):</label><input id="pumpHeight" type="number" step="0.01" />
-    <label>Pump Temp Rise (°F):</label><input id="pumpTempRise" type="number" />
-    <label>Pump Material:</label><select id="pumpMaterial"><option>Cast Steel</option><option>Cast Iron</option><option>Stainless Steel 316</option></select>
+    <label><input id="enableThermal" type="checkbox" /> Enable Thermal Growth Compensation</label><br/><br/>
+
+    <label>Motor height from bottom of foot to shaft center (in):</label>
+    <input id="motorHeight" type="number" step="0.01" />
+    <label>Motor temperature rise (°F):</label>
+    <input id="motorTempRise" type="number" />
+    <label>Motor material:</label>
+    <select id="motorMaterial">
+      <option>Cast Steel</option>
+      <option>Cast Iron</option>
+      <option>Stainless Steel 316</option>
+    </select>
+
+    <label>Pump height from bottom of foot to shaft center (in):</label>
+    <input id="pumpHeight" type="number" step="0.01" />
+    <label>Pump temperature rise (°F):</label>
+    <input id="pumpTempRise" type="number" />
+    <label>Pump material:</label>
+    <select id="pumpMaterial">
+      <option>Cast Steel</option>
+      <option>Cast Iron</option>
+      <option>Stainless Steel 316</option>
+    </select>
   </div>
 
   <div class="section">
@@ -67,13 +129,14 @@
   <div class="section">
     <h3>Vertical Alignment Graph</h3>
     <canvas id="vertGraph" width="400" height="150"></canvas>
+
     <h3>Horizontal Alignment Graph</h3>
     <canvas id="horizGraph" width="400" height="150"></canvas>
   </div>
 
   <div class="section">
     <h2>Stand-alone Horizontal Correction Instructions</h2>
-    <h4>*note* - these are separate readings taken from initial total sweep</h4>
+    <h4>*These are separate readings taken from an initial horizontal sweep.</h4>
     <p>To check and correct horizontal alignment:</p>
     <ol>
       <li>Zero both dials at the 3 o'clock position.</li>
@@ -86,117 +149,190 @@
 
   <div class="section">
     <h2>Quick Horizontal Live Move</h2>
-    <h4>Zero both dials at 3 o'clock. Then record readings at both 3 and 9 for Motor and Pump.</h4>
-    <label>Motor Dial 3 o'clock Reading:</label><input id="qc3_m" type="number" step="0.001" />
-    <label>Pump Dial 3 o'clock Reading:</label><input id="qc3_p" type="number" step="0.001" />
-    <label>Motor Dial 9 o'clock Reading:</label><input id="qc9_m" type="number" step="0.001" />
-    <label>Pump Dial 9 o'clock Reading:</label><input id="qc9_p" type="number" step="0.001" />
+    <h4>Zero both dials at 3 o'clock, then record readings at both 3 and 9 for motor and pump.</h4>
+    <label>Motor dial 3 o'clock reading:</label><input id="qc3_m" type="number" step="0.001" />
+    <label>Pump dial 3 o'clock reading:</label><input id="qc3_p" type="number" step="0.001" />
+    <label>Motor dial 9 o'clock reading:</label><input id="qc9_m" type="number" step="0.001" />
+    <label>Pump dial 9 o'clock reading:</label><input id="qc9_p" type="number" step="0.001" />
     <button onclick="calculateQuickCheck()">Compute Quick Check</button>
     <div class="results" id="quickResults"><p>Enter readings...</p></div>
   </div>
 
   <script>
+    function getNumber(id) {
+      const v = parseFloat(document.getElementById(id).value);
+      return isNaN(v) ? null : v;
+    }
+
     function calculateAlignment() {
-      const A = parseFloat(document.getElementById("distA").value);
-      const B = parseFloat(document.getElementById("distB").value);
-      const C = parseFloat(document.getElementById("distC").value);
-      const rpm = parseFloat(document.getElementById("rpm").value);
-      const coupling = parseFloat(document.getElementById("couplingDia").value);
-      const m6 = parseFloat(document.getElementById("m6").value);
-      const p6 = parseFloat(document.getElementById("p6").value);
-      const m3 = parseFloat(document.getElementById("m3").value);
-      const p3 = parseFloat(document.getElementById("p3").value);
-      const m9 = parseFloat(document.getElementById("m9").value);
-      const p9 = parseFloat(document.getElementById("p9").value);
-      const enableThermal = document.getElementById("enableThermal").checked;
-      const motorHeight = parseFloat(document.getElementById("motorHeight").value);
-      const motorTemp = parseFloat(document.getElementById("motorTempRise").value);
-      const pumpHeight = parseFloat(document.getElementById("pumpHeight").value);
-      const pumpTemp = parseFloat(document.getElementById("pumpTempRise").value);
+      // Geometry
+      const A = getNumber("distA");
+      const B = getNumber("distB");
+      const C = getNumber("distC");
+      const rpm = getNumber("rpm");
+      const coupling = getNumber("couplingDia");
 
-      // Vertical geometry
-      const VO = m6 - p6;
-      const VA = VO / A;
+      // Dial readings
+      const m12 = getNumber("m12");
+      const m3  = getNumber("m3");
+      const m6  = getNumber("m6");
+      const m9  = getNumber("m9");
 
-      // Thermal growth
-      let motorGrowth = 0, pumpGrowth = 0;
-      const coeffs = {"Cast Steel": 6.6e-6, "Cast Iron": 5.5e-6, "Stainless Steel 316": 9.6e-6};
-      if (enableThermal) {
-        motorGrowth = coeffs[document.getElementById("motorMaterial").value] * motorTemp * motorHeight;
-        pumpGrowth = coeffs[document.getElementById("pumpMaterial").value] * pumpTemp * pumpHeight;
+      const p12 = getNumber("p12");
+      const p3  = getNumber("p3");
+      const p6  = getNumber("p6");
+      const p9  = getNumber("p9");
+
+      // Basic validation
+      const required = [A,B,C,rpm,coupling,m12,m3,m6,m9,p12,p3,p6,p9];
+      if (required.some(v => v === null)) {
+        document.getElementById("results").innerHTML =
+          "<h3>Results:</h3><p>Please fill in all dimension and dial fields.</p>";
+        return;
       }
-      const thermalDiff = motorGrowth - pumpGrowth;
 
-      // Shim calculations
-      let S1 = VA * B + VO;
-      let S2 = VA * C + VO;
-      if (enableThermal) { S1 += thermalDiff; S2 += thermalDiff; }
-      S1 = S1.toFixed(4);
-      S2 = S2.toFixed(4);
+      // ===== VERTICAL REVERSE DIAL (12–6) =====
+      // D1 = TIR of motor-mounted dial, D2 = TIR of pump-mounted dial
+      const D1v = m6 - m12;
+      const D2v = p6 - p12;
 
-      // Horizontal geometry (initial)
-      const HO_init = m3 - p3;
-      const HA_init = HO_init / A;
+      const DavgV  = (D1v + D2v) / 2.0;
+      const halfD1v = D1v / 2.0;
 
-      // Tolerance based on coupling diameter and RPM
-      let vo_tol_val = coupling * 0.0005, va_tol_val = coupling * 0.0001;
-      let ho_tol_val = coupling * 0.0005, ha_tol_val = coupling * 0.0001;
-      if (rpm < 1800) { vo_tol_val*=1.5; va_tol_val*=1.5; ho_tol_val*=1.5; ha_tol_val*=1.5; }
-      else if (rpm > 3600) { vo_tol_val*=0.5; va_tol_val*=0.5; ho_tol_val*=0.5; ha_tol_val*=0.5; }
-      const vo_tol = vo_tol_val.toFixed(4), va_tol = va_tol_val.toFixed(4);
-      const ho_tol = ho_tol_val.toFixed(4), ha_tol = ha_tol_val.toFixed(4);
+      // Textbook reverse dial formulas (from your figure)
+      let S1 = (B + A) * DavgV - halfD1v;  // inboard (front) shim
+      let S2 = (C + A) * DavgV - halfD1v;  // outboard (rear) shim
 
-      // Smiley or sad based on initial geometry
-      const withinTol = Math.abs(VO) <= vo_tol_val && Math.abs(VA) <= va_tol_val && Math.abs(HO_init) <= ho_tol_val && Math.abs(HA_init) <= ha_tol_val;
-      const face = withinTol ? '😊 In tolerance' : '☹️ Out of tolerance';
+      // Vertical offset & angularity (shaft model y = mx + b; dials at x=0 and x=A)
+      const VO = halfD1v;                     // offset at driven-side dial (in)
+      const VA = (D2v - D1v) / (2.0 * A);     // angularity in/in
+
+      // ===== HORIZONTAL REVERSE DIAL (3–9) =====
+      // Same logic using 3 and 9 o'clock for geometry readout
+      const D1h = m9 - m3;
+      const D2h = p9 - p3;
+
+      const HO = D1h / 2.0;
+      const HA = (D2h - D1h) / (2.0 * A);
+
+      // ===== THERMAL GROWTH =====
+      const enableThermal = document.getElementById("enableThermal").checked;
+      const motorHeight = getNumber("motorHeight");
+      const motorTemp   = getNumber("motorTempRise");
+      const pumpHeight  = getNumber("pumpHeight");
+      const pumpTemp    = getNumber("pumpTempRise");
+
+      const coeffs = {
+        "Cast Steel": 6.6e-6,
+        "Cast Iron": 5.5e-6,
+        "Stainless Steel 316": 9.6e-6
+      };
+
+      let motorGrowth = 0;
+      let pumpGrowth  = 0;
+
+      if (enableThermal &&
+          motorHeight !== null && motorTemp !== null &&
+          pumpHeight !== null && pumpTemp !== null) {
+
+        const motorMat = document.getElementById("motorMaterial").value;
+        const pumpMat  = document.getElementById("pumpMaterial").value;
+
+        motorGrowth = coeffs[motorMat] * motorTemp * motorHeight;
+        pumpGrowth  = coeffs[pumpMat]  * pumpTemp  * pumpHeight;
+
+        const thermalDiff = motorGrowth - pumpGrowth;
+        // Apply the thermal growth difference to both feet
+        S1 += thermalDiff;
+        S2 += thermalDiff;
+      }
+
+      // ===== TOLERANCES (simple approximate scheme) =====
+      let vo_tol_val = coupling * 0.0005;
+      let va_tol_val = coupling * 0.0001;
+      let ho_tol_val = coupling * 0.0005;
+      let ha_tol_val = coupling * 0.0001;
+
+      if (rpm < 1800) {
+        vo_tol_val *= 1.5;
+        va_tol_val *= 1.5;
+        ho_tol_val *= 1.5;
+        ha_tol_val *= 1.5;
+      } else if (rpm > 3600) {
+        vo_tol_val *= 0.5;
+        va_tol_val *= 0.5;
+        ho_tol_val *= 0.5;
+        ha_tol_val *= 0.5;
+      }
+
+      const withinTol =
+        Math.abs(VO) <= vo_tol_val &&
+        Math.abs(VA) <= va_tol_val &&
+        Math.abs(HO) <= ho_tol_val &&
+        Math.abs(HA) <= ha_tol_val;
+
+      const face = withinTol ? "😊 In tolerance" : "☹️ Out of tolerance";
 
       const resultsHTML = `
-        <p>Positive values mean add shims, negative values means remove shims.</p>
-        <p>Front Foot Shim (S1): ${S1} in</p>
-        <p>Rear Foot Shim (S2): ${S2} in</p>
-        <p>Thermal Growth Motor: ${motorGrowth.toFixed(4)} in</p>
-        <p>Thermal Growth Pump: ${pumpGrowth.toFixed(4)} in</p>
-        <p>Thermal Growth Diff: ${thermalDiff.toFixed(4)} in</p>
-        <p>VO: ${VO.toFixed(4)} in</p>
-        <p>VA: ${VA.toFixed(4)} in/in</p>
-        <p>HO (3 o'clock): ${HO_init.toFixed(4)} in</p>
-        <p>HA (3 o'clock): ${HA_init.toFixed(4)} in/in</p>
-        <p><strong>Tolerance Thresholds (coupling ø ${coupling}" & RPM ${rpm}):</strong></p>
-        <p>VO ≤ ${vo_tol}"</p>
-        <p>VA ≤ ${va_tol}"/in</p>
-        <p>HO ≤ ${ho_tol}"</p>
-        <p>HA ≤ ${ha_tol}"/in</p>
+        <p>Positive values mean <strong>add</strong> shims, negative values mean <strong>remove</strong> shims.</p>
+        <p>Front (inboard) foot shim S1: ${S1.toFixed(4)} in</p>
+        <p>Rear (outboard) foot shim S2: ${S2.toFixed(4)} in</p>
+        <hr/>
+        <p>Vertical offset VO (at driven dial): ${VO.toFixed(4)} in</p>
+        <p>Vertical angularity VA: ${VA.toFixed(5)} in/in</p>
+        <p>Horizontal offset HO (at driven dial): ${HO.toFixed(4)} in</p>
+        <p>Horizontal angularity HA: ${HA.toFixed(5)} in/in</p>
+        <hr/>
+        <p>Thermal growth (motor): ${motorGrowth.toFixed(4)} in</p>
+        <p>Thermal growth (pump): ${pumpGrowth.toFixed(4)} in</p>
+        <hr/>
+        <p><strong>Tolerance thresholds (coupling ø ${coupling}" & RPM ${rpm}):</strong></p>
+        <p>VO ≤ ${vo_tol_val.toFixed(4)}"</p>
+        <p>VA ≤ ${va_tol_val.toFixed(5)}"/in</p>
+        <p>HO ≤ ${ho_tol_val.toFixed(4)}"</p>
+        <p>HA ≤ ${ha_tol_val.toFixed(5)}"/in</p>
         <p class="smiley">${face}</p>
       `;
 
       document.getElementById("results").innerHTML = `<h3>Results:</h3>${resultsHTML}`;
+
+      // Simple bottom horizontal instruction using HO as half TIR
       document.getElementById("bottomHorizontalInstructions").innerHTML = `
-        <p>Rear motor foot: move ${(HO_init/2).toFixed(4)} in ${(HO_init/2)>0?"towards 3 o'clock":"towards 9 o'clock"}</p>
-        <p>Front motor foot: move ${(HO_init/2).toFixed(4)} in ${(HO_init/2)>0?"towards 9 o'clock":"towards 3 o'clock"}</p>
+        <p>Rear motor foot: move ${Math.abs(HO).toFixed(4)} in ${HO > 0 ? "towards 3 o'clock" : "towards 9 o'clock"}.</p>
+        <p>Front motor foot: move ${Math.abs(HO).toFixed(4)} in ${HO > 0 ? "towards 9 o'clock" : "towards 3 o'clock"}.</p>
       `;
 
       drawGraph("vertGraph", VO, "Vertical");
-      drawGraph("horizGraph", HO_init, "Horizontal");
+      drawGraph("horizGraph", HO, "Horizontal");
     }
 
     function calculateQuickCheck() {
-      const qc3m = parseFloat(document.getElementById("qc3_m").value);
-      const qc3p = parseFloat(document.getElementById("qc3_p").value);
-      const qc9m = parseFloat(document.getElementById("qc9_m").value);
-      const qc9p = parseFloat(document.getElementById("qc9_p").value);
-      const span = parseFloat(document.getElementById("distA").value);
+      const qc3m = getNumber("qc3_m");
+      const qc3p = getNumber("qc3_p");
+      const qc9m = getNumber("qc9_m");
+      const qc9p = getNumber("qc9_p");
+      const span = getNumber("distA");
+
+      if ([qc3m,qc3p,qc9m,qc9p,span].some(v => v === null)) {
+        document.getElementById("quickResults").innerHTML =
+          "<p>Please fill in all quick check and span fields.</p>";
+        return;
+      }
+
       const dm = qc9m - qc3m;
       const dp = qc9p - qc3p;
       const tir = dm - dp;
-      const offset = tir / 2;
+      const offset = tir / 2.0;
       const angular = offset / span;
+
       const dirRear = offset > 0 ? "towards 3 o'clock" : "towards 9 o'clock";
       const dirFront = offset > 0 ? "towards 9 o'clock" : "towards 3 o'clock";
+
       const html = `
-        <p>Offset (Half TIR): ${Math.abs(offset).toFixed(4)} in</p>
-        <p>Angular Misalignment: ${angular.toFixed(5)} in/in</p>
-        <p>Rear motor foot: move ${Math.abs(offset).toFixed(4)} in ${dirRear}</p>
-        <p>Front motor foot: move ${Math.abs(offset).toFixed(4)} in ${dirFront}</p>
+        <p>Offset (half TIR): ${Math.abs(offset).toFixed(4)} in</p>
+        <p>Angular misalignment: ${angular.toFixed(5)} in/in</p>
+        <p>Rear motor foot: move ${Math.abs(offset).toFixed(4)} in ${dirRear}.</p>
+        <p>Front motor foot: move ${Math.abs(offset).toFixed(4)} in ${dirFront}.</p>
       `;
       document.getElementById("quickResults").innerHTML = html;
     }
@@ -205,17 +341,20 @@
       const canvas = document.getElementById(id);
       const ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
+
       ctx.beginPath();
-      ctx.moveTo(centerX - 50, centerY - value * 1000);
+      ctx.moveTo(centerX - 60, centerY - value * 1000);
       ctx.lineTo(centerX, centerY);
-      ctx.lineTo(centerX + 50, centerY + value * 1000);
-      ctx.strokeStyle = "#000";
+      ctx.lineTo(centerX + 60, centerY + value * 1000);
+      ctx.strokeStyle = "#000000";
       ctx.lineWidth = 2;
       ctx.stroke();
+
       ctx.font = "12px Arial";
-      ctx.fillText(`${label} Alignment`, 10, 10);
+      ctx.fillText(`${label} Alignment`, 10, 15);
     }
   </script>
 </body>
