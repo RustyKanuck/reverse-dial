@@ -13,7 +13,11 @@
     }
     h1 { text-align: center; }
     h2 { margin-top: 0; }
-    label { font-weight: bold; display: block; margin-top: 5px; }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 5px;
+    }
     input, select {
       width: 100%;
       padding: 5px;
@@ -158,6 +162,16 @@
     <div class="results" id="quickResults"><p>Enter readings...</p></div>
   </div>
 
+  <div class="section">
+    <h2>Reference: Reverse Dial Setup Diagram</h2>
+    <p>If you forget where A, B, C, D1, and D2 are measured from, click the image to view it full size.</p>
+    <a href="/mnt/data/reverse indicator.png" target="_blank">
+      <img src="/mnt/data/reverse indicator.png"
+           alt="Reverse dial reference diagram"
+           style="max-width:100%;height:auto;border:1px solid #ccc;">
+    </a>
+  </div>
+
   <script>
     function getNumber(id) {
       const v = parseFloat(document.getElementById(id).value);
@@ -192,28 +206,24 @@
       }
 
       // ===== VERTICAL REVERSE DIAL (12–6) =====
-      // D1 = TIR of motor-mounted dial, D2 = TIR of pump-mounted dial
-      const D1v = m6 - m12;
-      const D2v = p6 - p12;
+      // Raw dial readings from 12 → 6
+      const D1v = m6 - m12;   // motor-mounted dial change 12→6
+      const D2v = p6 - p12;   // pump-mounted dial change 12→6
 
-      const DavgV  = (D1v + D2v) / 2.0;
-      const halfD1v = D1v / 2.0;
+      // Vertical offset & angularity (classic reverse-dial geometry)
+      const VO = D1v / 2.0;                     // offset at driven-side dial
+      const VA = (D2v - D1v) / (2.0 * A);       // angularity in/in
 
-      // Textbook reverse dial formulas (from your figure)
-      let S1 = (B + A) * DavgV - halfD1v;  // inboard (front) shim
-      let S2 = (C + A) * DavgV - halfD1v;  // outboard (rear) shim
-
-      // Vertical offset & angularity (shaft model y = mx + b; dials at x=0 and x=A)
-      const VO = halfD1v;                     // offset at driven-side dial (in)
-      const VA = (D2v - D1v) / (2.0 * A);     // angularity in/in
+      // Shim moves at motor feet
+      let S1 = VO + VA * B;   // front (inboard) foot
+      let S2 = VO + VA * C;   // rear (outboard) foot
 
       // ===== HORIZONTAL REVERSE DIAL (3–9) =====
-      // Same logic using 3 and 9 o'clock for geometry readout
-      const D1h = m9 - m3;
-      const D2h = p9 - p3;
+      const D1h = m9 - m3;    // motor-mounted 3→9
+      const D2h = p9 - p3;    // pump-mounted 3→9
 
-      const HO = D1h / 2.0;
-      const HA = (D2h - D1h) / (2.0 * A);
+      const HO = D1h / 2.0;                     // offset at driven-side dial
+      const HA = (D2h - D1h) / (2.0 * A);       // angularity in/in
 
       // ===== THERMAL GROWTH =====
       const enableThermal = document.getElementById("enableThermal").checked;
@@ -242,7 +252,6 @@
         pumpGrowth  = coeffs[pumpMat]  * pumpTemp  * pumpHeight;
 
         const thermalDiff = motorGrowth - pumpGrowth;
-        // Apply the thermal growth difference to both feet
         S1 += thermalDiff;
         S2 += thermalDiff;
       }
@@ -296,7 +305,7 @@
 
       document.getElementById("results").innerHTML = `<h3>Results:</h3>${resultsHTML}`;
 
-      // Simple bottom horizontal instruction using HO as half TIR
+      // Simple bottom horizontal instruction using HO as offset
       document.getElementById("bottomHorizontalInstructions").innerHTML = `
         <p>Rear motor foot: move ${Math.abs(HO).toFixed(4)} in ${HO > 0 ? "towards 3 o'clock" : "towards 9 o'clock"}.</p>
         <p>Front motor foot: move ${Math.abs(HO).toFixed(4)} in ${HO > 0 ? "towards 9 o'clock" : "towards 3 o'clock"}.</p>
