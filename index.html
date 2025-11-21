@@ -56,6 +56,7 @@
 <body>
   <h1>Reverse Dial Method</h1>
 
+  <!-- DIMENSIONS -->
   <div class="section">
     <h2>Dimensions</h2>
     <h4>
@@ -78,6 +79,7 @@
     <input id="couplingDia" type="number" step="0.01" />
   </div>
 
+  <!-- MOTOR-MOUNTED DIAL (D1) -->
   <div class="section">
     <h2>Motor-Mounted Dial Readings (D1) – Reads off Driven</h2>
     <label>12 o'clock:</label><input id="m12" type="number" step="0.001" />
@@ -86,6 +88,7 @@
     <label>9 o'clock:</label><input id="m9" type="number" step="0.001" />
   </div>
 
+  <!-- PUMP-MOUNTED DIAL (D2) -->
   <div class="section">
     <h2>Pump-Mounted Dial Readings (D2) – Reads off Driver</h2>
     <label>12 o'clock:</label><input id="p12" type="number" step="0.001" />
@@ -94,6 +97,7 @@
     <label>9 o'clock:</label><input id="p9" type="number" step="0.001" />
   </div>
 
+  <!-- THERMAL GROWTH -->
   <div class="section">
     <h2>Thermal Growth Compensation</h2>
     <label><input id="enableThermal" type="checkbox" /> Enable Thermal Growth Compensation</label><br/><br/>
@@ -125,11 +129,13 @@
     <button onclick="calculateAlignment()">Calculate Alignment</button>
   </div>
 
+  <!-- RESULTS -->
   <div class="section results" id="results">
     <h3>Results:</h3>
     <p>Waiting for input...</p>
   </div>
 
+  <!-- GRAPHS -->
   <div class="section">
     <h3>Vertical Alignment Graph</h3>
     <canvas id="vertGraph" width="400" height="150"></canvas>
@@ -138,6 +144,7 @@
     <canvas id="horizGraph" width="400" height="150"></canvas>
   </div>
 
+  <!-- HORIZONTAL INSTRUCTIONS -->
   <div class="section">
     <h2>Stand-alone Horizontal Correction Instructions</h2>
     <h4>*These are separate readings taken from an initial horizontal sweep.</h4>
@@ -151,6 +158,7 @@
     <p id="bottomHorizontalInstructions"><em>Instructions will appear after calculation.</em></p>
   </div>
 
+  <!-- QUICK HORIZONTAL -->
   <div class="section">
     <h2>Quick Horizontal Live Move</h2>
     <h4>Zero both dials at 3 o'clock, then record readings at both 3 and 9 for motor and pump.</h4>
@@ -162,11 +170,16 @@
     <div class="results" id="quickResults"><p>Enter readings...</p></div>
   </div>
 
+  <!-- REFERENCE IMAGE -->
   <div class="section">
     <h2>Reference: Reverse Dial Setup Diagram</h2>
-    <p>If you forget where A, B, C, D1, and D2 are measured from, click the image to view it full size.</p>
-    <a href="/mnt/data/reverse indicator.png" target="_blank">
-      <img src="/mnt/data/reverse indicator.png"
+    <p>
+      If you forget where A, B, C, D<span style="vertical-align:sub;font-size:0.8em;">1</span> and D<span style="vertical-align:sub;font-size:0.8em;">2</span>
+      are measured from, click the image to view it full size.
+    </p>
+    <!-- Put "reverse_indicator.png" in the same folder as this HTML file -->
+    <a href="reverse_indicator.png" target="_blank">
+      <img src="reverse_indicator.png"
            alt="Reverse dial reference diagram"
            style="max-width:100%;height:auto;border:1px solid #ccc;">
     </a>
@@ -205,27 +218,29 @@
         return;
       }
 
-      // ===== VERTICAL REVERSE DIAL (12–6) =====
+      // ========== VERTICAL REVERSE DIAL (12–6) ==========
       // Raw dial readings from 12 → 6
       const D1v = m6 - m12;   // motor-mounted dial change 12→6
       const D2v = p6 - p12;   // pump-mounted dial change 12→6
 
       // Vertical offset & angularity (classic reverse-dial geometry)
-      const VO = D1v / 2.0;                     // offset at driven-side dial
-      const VA = (D2v - D1v) / (2.0 * A);       // angularity in/in
+      // VO: offset at driven-side dial (near dial)
+      // VA: angular misalignment (in/in)
+      const VO = D1v / 2.0;
+      const VA = (D2v - D1v) / (2.0 * A);
 
-      // Shim moves at motor feet
+      // Shim moves at motor feet (driver)
       let S1 = VO + VA * B;   // front (inboard) foot
       let S2 = VO + VA * C;   // rear (outboard) foot
 
-      // ===== HORIZONTAL REVERSE DIAL (3–9) =====
+      // ========== HORIZONTAL REVERSE DIAL (3–9) ==========
       const D1h = m9 - m3;    // motor-mounted 3→9
       const D2h = p9 - p3;    // pump-mounted 3→9
 
-      const HO = D1h / 2.0;                     // offset at driven-side dial
-      const HA = (D2h - D1h) / (2.0 * A);       // angularity in/in
+      const HO = D1h / 2.0;                     // horizontal offset at driven dial
+      const HA = (D2h - D1h) / (2.0 * A);       // horizontal angularity (in/in)
 
-      // ===== THERMAL GROWTH =====
+      // ========== THERMAL GROWTH ==========
       const enableThermal = document.getElementById("enableThermal").checked;
       const motorHeight = getNumber("motorHeight");
       const motorTemp   = getNumber("motorTempRise");
@@ -256,7 +271,7 @@
         S2 += thermalDiff;
       }
 
-      // ===== TOLERANCES (simple approximate scheme) =====
+      // ========== TOLERANCES (simple approximate scheme) ==========
       let vo_tol_val = coupling * 0.0005;
       let va_tol_val = coupling * 0.0001;
       let ho_tol_val = coupling * 0.0005;
@@ -305,7 +320,7 @@
 
       document.getElementById("results").innerHTML = `<h3>Results:</h3>${resultsHTML}`;
 
-      // Simple bottom horizontal instruction using HO as offset
+      // Simple horizontal instruction using HO as offset
       document.getElementById("bottomHorizontalInstructions").innerHTML = `
         <p>Rear motor foot: move ${Math.abs(HO).toFixed(4)} in ${HO > 0 ? "towards 3 o'clock" : "towards 9 o'clock"}.</p>
         <p>Front motor foot: move ${Math.abs(HO).toFixed(4)} in ${HO > 0 ? "towards 9 o'clock" : "towards 3 o'clock"}.</p>
